@@ -513,3 +513,60 @@ Shorthands - v-on Shorthand (https://vuejs.org/v2/guide/syntax.html#v-on-Shortha
     (text)
     (end_tag
       (tag_name))))
+
+================================================================================
+Custom blocks are raw text
+================================================================================
+
+<template><div /></template>
+
+<i18n lang="json">
+{ "hello": "<world>" }
+</i18n>
+
+<docs lang="md">
+# Hello
+
+<div>should stay raw text</div>
+</docs>
+
+<i18n src="./messages.json" />
+
+--------------------------------------------------------------------------------
+
+(component
+  (template_element
+    (start_tag
+      (tag_name))
+    (element
+      (self_closing_tag
+        (tag_name)))
+    (end_tag
+      (tag_name)))
+  (custom_block_element
+    (start_tag
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (raw_text)
+    (end_tag
+      (tag_name)))
+  (custom_block_element
+    (start_tag
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (raw_text)
+    (end_tag
+      (tag_name)))
+  (custom_block_element
+    (self_closing_tag
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))))

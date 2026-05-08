@@ -9,6 +9,7 @@ enum TokenType {
     TEMPLATE_START_TAG_NAME,
     SCRIPT_START_TAG_NAME,
     STYLE_START_TAG_NAME,
+    CUSTOM_BLOCK_START_TAG_NAME,
     END_TAG_NAME,
     ERRONEOUS_END_TAG_NAME,
     SELF_CLOSING_TAG_DELIMITER,
@@ -239,8 +240,27 @@ static bool scan_raw_text(Scanner *scanner, TSLexer *lexer) {
 
     lexer->mark_end(lexer);
 
-    const char *end_delimiter =
-        VEC_BACK(scanner->tags).type == SCRIPT ? "</SCRIPT" : "</STYLE";
+    const char *end_delimiter;
+    String custom_end_delimiter = {0};
+    Tag *tag = &VEC_BACK(scanner->tags);
+    if (tag->type == SCRIPT) {
+        end_delimiter = "</SCRIPT";
+    } else if (tag->type == STYLE) {
+        end_delimiter = "</STYLE";
+    } else if (tag->type == CUSTOM && tag->custom_tag_name.data != NULL) {
+        custom_end_delimiter.len = 2 + tag->custom_tag_name.len;
+        custom_end_delimiter.cap = custom_end_delimiter.len;
+        custom_end_delimiter.data = (char *)calloc(
+            custom_end_delimiter.len + 1, sizeof(char));
+        assert(custom_end_delimiter.data != NULL);
+        custom_end_delimiter.data[0] = '<';
+        custom_end_delimiter.data[1] = '/';
+        strncpy(&custom_end_delimiter.data[2], tag->custom_tag_name.data,
+                tag->custom_tag_name.len);
+        end_delimiter = custom_end_delimiter.data;
+    } else {
+        return false;
+    }
 
     unsigned delimiter_index = 0;
     while (lexer->lookahead) {
@@ -258,6 +278,7 @@ static bool scan_raw_text(Scanner *scanner, TSLexer *lexer) {
     }
 
     lexer->result_symbol = RAW_TEXT;
+    STRING_FREE(custom_end_delimiter);
     return true;
 }
 
@@ -317,7 +338,8 @@ static bool scan_implicit_end_tag(Scanner *scanner, TSLexer *lexer) {
     return false;
 }
 
-static bool scan_start_tag_name(Scanner *scanner, TSLexer *lexer) {
+static bool scan_start_tag_name(Scanner *scanner, TSLexer *lexer,
+                                const bool *valid_symbols) {
     String tag_name = scan_tag_name(lexer);
     if (tag_name.len == 0) {
         STRING_FREE(tag_name);
@@ -334,6 +356,11 @@ static bool scan_start_tag_name(Scanner *scanner, TSLexer *lexer) {
             break;
         case STYLE:
             lexer->result_symbol = STYLE_START_TAG_NAME;
+            break;
+        case CUSTOM:
+            lexer->result_symbol = valid_symbols[CUSTOM_BLOCK_START_TAG_NAME]
+                                       ? CUSTOM_BLOCK_START_TAG_NAME
+                                       : START_TAG_NAME;
             break;
         default:
             lexer->result_symbol = START_TAG_NAME;
@@ -419,6 +446,7 @@ static bool scan(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols) {
     }
 
     if (valid_symbols[RAW_TEXT] && !valid_symbols[START_TAG_NAME] &&
+        !valid_symbols[CUSTOM_BLOCK_START_TAG_NAME] &&
         !valid_symbols[END_TAG_NAME]) {
         return scan_raw_text(scanner, lexer);
     }
@@ -456,10 +484,12 @@ static bool scan(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols) {
 
         default:
             if ((valid_symbols[START_TAG_NAME] ||
+                 valid_symbols[CUSTOM_BLOCK_START_TAG_NAME] ||
                  valid_symbols[END_TAG_NAME]) &&
                 !valid_symbols[RAW_TEXT]) {
-                return valid_symbols[START_TAG_NAME]
-                           ? scan_start_tag_name(scanner, lexer)
+                return valid_symbols[START_TAG_NAME] ||
+                               valid_symbols[CUSTOM_BLOCK_START_TAG_NAME]
+                           ? scan_start_tag_name(scanner, lexer, valid_symbols)
                            : scan_end_tag_name(scanner, lexer);
             }
     }

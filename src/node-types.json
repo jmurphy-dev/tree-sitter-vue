@@ -25,6 +25,7 @@
   {
     "type": "component",
     "named": true,
+    "root": true,
     "fields": {},
     "children": {
       "multiple": true,
@@ -32,6 +33,10 @@
       "types": [
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "custom_block_element",
           "named": true
         },
         {
@@ -48,6 +53,33 @@
         },
         {
           "type": "template_element",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "custom_block_element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "raw_text",
+          "named": true
+        },
+        {
+          "type": "self_closing_tag",
+          "named": true
+        },
+        {
+          "type": "start_tag",
           "named": true
         }
       ]

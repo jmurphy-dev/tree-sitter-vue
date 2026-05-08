@@ -8,6 +8,7 @@ module.exports = grammar({
     $._template_start_tag_name,
     $._script_start_tag_name,
     $._style_start_tag_name,
+    $._custom_block_start_tag_name,
     $._end_tag_name,
     $.erroneous_end_tag_name,
     "/>",
@@ -26,6 +27,7 @@ module.exports = grammar({
         $.template_element,
         $.script_element,
         $.style_element,
+        $.custom_block_element,
       ),
     ),
 
@@ -67,6 +69,15 @@ module.exports = grammar({
       $.end_tag,
     ),
 
+    custom_block_element: $ => choice(
+      seq(
+        alias($.custom_block_start_tag, $.start_tag),
+        optional($.raw_text),
+        $.end_tag,
+      ),
+      alias($.custom_block_self_closing_tag, $.self_closing_tag),
+    ),
+
     start_tag: $ => seq(
       "<",
       alias($._start_tag_name, $.tag_name),
@@ -93,6 +104,20 @@ module.exports = grammar({
       alias($._style_start_tag_name, $.tag_name),
       repeat(choice($.attribute, $.directive_attribute)),
       ">",
+    ),
+
+    custom_block_start_tag: $ => seq(
+      "<",
+      alias($._custom_block_start_tag_name, $.tag_name),
+      repeat(choice($.attribute, $.directive_attribute)),
+      ">",
+    ),
+
+    custom_block_self_closing_tag: $ => seq(
+      "<",
+      alias($._custom_block_start_tag_name, $.tag_name),
+      repeat(choice($.attribute, $.directive_attribute)),
+      "/>",
     ),
 
     self_closing_tag: $ => seq(

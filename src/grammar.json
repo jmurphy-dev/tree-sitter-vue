@@ -1,4 +1,5 @@
 {
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
   "name": "vue",
   "rules": {
     "component": {
@@ -25,6 +26,10 @@
           {
             "type": "SYMBOL",
             "name": "style_element"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "custom_block_element"
           }
         ]
       }
@@ -189,6 +194,50 @@
         }
       ]
     },
+    "custom_block_element": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "custom_block_start_tag"
+              },
+              "named": true,
+              "value": "start_tag"
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "raw_text"
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "SYMBOL",
+              "name": "end_tag"
+            }
+          ]
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "custom_block_self_closing_tag"
+          },
+          "named": true,
+          "value": "self_closing_tag"
+        }
+      ]
+    },
     "start_tag": {
       "type": "SEQ",
       "members": [
@@ -338,6 +387,82 @@
         {
           "type": "STRING",
           "value": ">"
+        }
+      ]
+    },
+    "custom_block_start_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "<"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_custom_block_start_tag_name"
+          },
+          "named": true,
+          "value": "tag_name"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "attribute"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "directive_attribute"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        }
+      ]
+    },
+    "custom_block_self_closing_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "<"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_custom_block_start_tag_name"
+          },
+          "named": true,
+          "value": "tag_name"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "attribute"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "directive_attribute"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "/>"
         }
       ]
     },
@@ -848,6 +973,10 @@
     },
     {
       "type": "SYMBOL",
+      "name": "_custom_block_start_tag_name"
+    },
+    {
+      "type": "SYMBOL",
       "name": "_end_tag_name"
     },
     {
@@ -872,5 +1001,6 @@
     }
   ],
   "inline": [],
-  "supertypes": []
+  "supertypes": [],
+  "reserved": {}
 }
